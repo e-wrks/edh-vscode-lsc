@@ -1,0 +1,66 @@
+{
+	"preview": true,
+	"publisher": "ComplYue",
+	"license": "MIT",
+	"repository": {
+		"url": "https://github.com/e-wrks/edh-vscode-lsc"
+	},
+	"name": "edh-vscode-lsc",
+	"displayName": "Đ (Edh) Language Server (VSCode client)",
+	"description": "LSP client extension to hook up Đ (Edh) language server for VSCode",
+	"version": "1.0.0",
+	"engines": {
+		"vscode": "^1.50.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"activationEvents": [
+		"onLanguage:edh"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"configuration": [
+			{
+				"title": "Đ (Edh) Language Server",
+				"properties": {
+					"Edh.LanguageServer.noLaunch": {
+						"type": "boolean",
+						"default": false,
+						"scope": "window",
+						"description": "Disable auto launching of Đ (Edh) Language Server.\nIt must be launched manually or by other means, usually for debug purpose."
+					},
+					"Edh.LanguageServer.debug": {
+						"type": "boolean",
+						"default": false,
+						"scope": "window",
+						"description": "Debug Đ (Edh) Language Server"
+					}
+				}
+			}
+		]
+	},
+	"extensionDependencies": [
+		"ComplYue.edh-vscode-syntax"
+	],
+	"scripts": {
+		"vscode:prepublish": "yarn run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint src --ext ts",
+		"watch": "tsc -watch -p ./"
+	},
+	"dependencies": {
+		"vscode-languageclient": "^6.1.3"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^7.0.2",
+		"@types/node": "^12.12.0",
+		"@types/vscode": "^1.50.0",
+		"@typescript-eslint/eslint-plugin": "^3.7.0",
+		"@typescript-eslint/parser": "^3.7.0",
+		"eslint": "^7.5.0",
+		"glob": "^7.1.6",
+		"typescript": "^3.9.5"
+	}
+}
