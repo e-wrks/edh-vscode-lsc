@@ -1,20 +1,52 @@
 # Đ (Edh) Language Server for VSCode
 
-This extension implements
-[language server](https://microsoft.github.io/language-server-protocol) client
-to [Đ (Edh) Language Server](https://github.com/e-wrks/els)
+This extension integrates
+[Đ (Edh) Language Server](https://github.com/e-wrks/els)
+to VSCode (by implementing a
+[language server](https://microsoft.github.io/language-server-protocol) client)
 
-Make sure you have installed [EPM](https://github.com/e-wrks/epm), and the
-[els](https://github.com/e-wrks/els) package has been installed, either when
-initializing your
-[epm home](https://github.com/e-wrks/epm#create-a-new-epm-home), e.g.
+## Install
+
+1.  Make sure you have [EPM](https://github.com/e-wrks/epm) installed
+
+2.  Minimum set of packages to install is
+    [edh](https://github.com/e-wrks/edh),
+    [nedh](https://github.com/e-wrks/nedh) and
+    [els](https://github.com/e-wrks/els). They can be installed either:
+
+    - When initializing your
+      [epm home](https://github.com/e-wrks/epm#create-a-new-epm-home), e.g.
+
+      ```console
+      $ mkdir /my/epm-home
+      $ cd /my/epm-home
+      $ epm init edh nedh els
+      ```
+
+    - Or later e.g.
+
+      ```console
+      $ cd /my/epm-home
+      $ epm install edh nedh els
+      ```
+
+## Build
+
+`cd` to the automatically created `edh-universe` subdirectory of your
+[epm home](https://github.com/e-wrks/epm#create-a-new-epm-home)
 
 ```console
-$ epm init edh nedh els
+$ cd /my/epm-home/edh-universe/
 ```
 
-Or later e.g.
+### with [Stack](https://haskellstack.org)
 
 ```console
-$ epm install edh nedh els
+$ stack install
+```
+
+### with [Cabal](https://www.haskell.org/cabal)
+
+```console
+$ cabal v2-install --overwrite-policy=always
 ```
