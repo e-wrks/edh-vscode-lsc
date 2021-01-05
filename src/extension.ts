@@ -32,14 +32,12 @@ function checkKillELS(): void {
   if (null === ps) {
     return;
   }
-  setTimeout(() => {
-    try {
-      process.kill(ps.pid, <any>0);
-      terminate(ps);
-    } catch (error) {
-      // All is fine.
-    }
-  }, 2000);
+  try {
+    process.kill(ps.pid, <any>0);
+    terminate(ps);
+  } catch (error) {
+    // All is fine.
+  }
 }
 
 function lscLog(msg: string) {
