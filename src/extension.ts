@@ -27,7 +27,7 @@ let noLaunchLS = false
 let client: LanguageClient
 let psELS: cp.ChildProcess | null = null
 
-function checkKillELS(ps: cp.ChildProcess | null): void {
+function checkKillProcess(ps: cp.ChildProcess | null): void {
   if (null === ps) {
     return;
   }
@@ -103,8 +103,9 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
         }) : undefined
 
         try {
-          checkKillELS(psELS)
+          checkKillProcess(psELS)
           psELS = cp.spawn(elsCmd, {
+            detached: false,
             shell: true,
             cwd: elsWorkFolder,
             stdio: ['inherit', 'pipe', 'pipe', 'pipe',],
@@ -182,9 +183,9 @@ export function activate(_context: vscode.ExtensionContext) {
 
 export function deactivate() {
   if (client) {
-    return client.stop().then(() => checkKillELS(psELS))
+    return client.stop().then(() => checkKillProcess(psELS))
   } else {
-    checkKillELS(psELS)
+    checkKillProcess(psELS)
   }
 }
 
