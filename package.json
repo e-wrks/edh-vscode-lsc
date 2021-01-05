@@ -50,6 +50,7 @@
 		"watch": "tsc -watch -p ./"
 	},
 	"dependencies": {
+		"vscode-jsonrpc": "^5.0.1",
 		"vscode-languageclient": "^6.1.3"
 	},
 	"devDependencies": {

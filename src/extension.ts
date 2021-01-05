@@ -5,6 +5,11 @@ import * as net from 'net'
 
 import * as vscode from 'vscode'
 
+
+import {
+  SocketMessageReader, SocketMessageWriter,
+} from 'vscode-jsonrpc'
+
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -12,14 +17,30 @@ import {
 } from 'vscode-languageclient'
 
 import {
-  SocketMessageReader, SocketMessageWriter,
-} from 'vscode-jsonrpc'
+  terminate,
+} from 'vscode-languageclient/lib/utils/processes'
 
 
 let debugLSP = false
 let noLaunchLS = false
 
 let client: LanguageClient
+let psELS: cp.ChildProcess | null = null
+
+function checkKillELS(): void {
+  const ps = psELS
+  if (null === ps) {
+    return;
+  }
+  setTimeout(() => {
+    try {
+      process.kill(ps.pid, <any>0);
+      terminate(ps);
+    } catch (error) {
+      // All is fine.
+    }
+  }, 2000);
+}
 
 function lscLog(msg: string) {
   if (client) {
@@ -85,7 +106,8 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
         }) : undefined
 
         try {
-          const psELS = cp.spawn(elsCmd, {
+          checkKillELS()
+          psELS = cp.spawn(elsCmd, {
             shell: true,
             cwd: elsWorkFolder,
             stdio: ['inherit', 'pipe', 'pipe', 'pipe',],
@@ -165,6 +187,7 @@ export function deactivate() {
   if (client) {
     return client.stop()
   }
+  checkKillELS()
 }
 
 function sleep(ms: number) {
