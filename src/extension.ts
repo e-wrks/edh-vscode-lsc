@@ -183,7 +183,9 @@ export function activate(_context: vscode.ExtensionContext) {
 
 export function deactivate() {
   if (client) {
-    return client.stop().then(() => checkKillELS())
+    return client.stop().then(checkKillELS)
+  } else {
+    checkKillELS()
   }
 }
 
