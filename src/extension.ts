@@ -16,10 +16,6 @@ import {
   MessageTransports,
 } from 'vscode-languageclient'
 
-import {
-  terminate,
-} from 'vscode-languageclient/lib/utils/processes'
-
 
 let debugLSP = false
 let noLaunchLS = false
@@ -32,8 +28,8 @@ function checkKillProcess(ps: cp.ChildProcess | null): void {
     return;
   }
   try {
-    process.kill(ps.pid, <any>0);
-    terminate(ps);
+    console.debug('Killing els server pid=' + ps.pid)
+    process.kill(ps.pid, "SIGKILL");
   } catch (error) {
     // All is fine.
   }
@@ -50,7 +46,7 @@ function lscLog(msg: string) {
 
 async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTransports> {
   const ElsConnRetry = 10
-  const ElsConnWait = 3000
+  const ElsConnWait = 9000
 
   lscLog('Obtaining els config ...')
   const elsPort: string = await new Promise((resolve, reject) => {
@@ -67,7 +63,6 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
   lscLog('Got configured els port ' + elsPort)
 
   let actPort = elsPort
-  let dynPort = ''
   let finalErr = Error('failed connecting to els')
   for (let retryCntr = 0, retryWait = 0; ;) {
     try {
@@ -97,42 +92,49 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
           lscLog('Launching els server ... ')
         }
 
-        const elsCmd = debugLSP ? `stack run els` : `epm x els`
+        const elsCmdl = debugLSP ? ['stack', 'run', 'els'] : ['epm', 'x', 'els']
         const elsEnv = debugLSP ? Object.assign({}, ps.env, {
           'EDH_LOG_LEVEL': 'DEBUG',
         }) : undefined
 
         try {
           checkKillProcess(psELS)
-          psELS = cp.spawn(elsCmd, {
-            detached: false,
-            shell: true,
+          psELS = cp.spawn('/usr/bin/env', elsCmdl, {
+            shell: false,
             cwd: elsWorkFolder,
             stdio: ['inherit', 'pipe', 'pipe', 'pipe',],
             env: elsEnv,
           })
           lscLog('Launched els server pid=' + psELS.pid)
-          // pump els std output to extension output channel
-          const [elsOut, elsErr, elsPort] = psELS.stdio.slice(1, 4)
-          if (elsOut) {
-            elsOut.on('data',
-              data => client.outputChannel.append(data.toString()))
-          }
-          if (elsErr) {
-            elsErr.on('data',
-              data => client.outputChannel.append(data.toString()))
-          }
-          if (elsPort) {
-            dynPort = ''
-            elsPort.on('data', data => {
-              dynPort += data.toString()
-              console.debug('Dyn port updated: ' + dynPort + ' from segment ' + data)
-            })
-            elsPort.on('close', () => {
-              actPort = dynPort.trim()
-              lscLog('Got dynamic els port: ' + actPort + ' from ' + dynPort)
-            })
-          }
+            ;
+          (() => {
+            const ps = psELS
+            ps.on('exit', () => lscLog('els server crashed pid=' + ps.pid))
+            // pump els std output to extension output channel
+            const [elsOut, elsErr, elsPort] = ps.stdio.slice(1, 4)
+            if (elsOut) {
+              elsOut.on('data',
+                data => client.outputChannel.append(data.toString()))
+            }
+            if (elsErr) {
+              elsErr.on('data',
+                data => client.outputChannel.append(data.toString()))
+            }
+            if (elsPort) {
+              let dynPort = ''
+              elsPort.on('data', data => {
+                dynPort += data.toString()
+                console.debug('Dyn port updated: ' + dynPort + ' from segment ' + data)
+              })
+              elsPort.on('close', () => {
+                const dynPortFinal = dynPort.trim()
+                lscLog('Got dynamic els port: ' + dynPortFinal + ' from ' + dynPort)
+                if (dynPortFinal) {
+                  actPort = dynPortFinal
+                }
+              })
+            }
+          })()
         } catch (err) {
           console.error(err)
           lscLog('Failed launching els server: ' + err)
