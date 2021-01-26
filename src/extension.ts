@@ -111,6 +111,7 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
             stdio: ['inherit', 'pipe', 'pipe', 'pipe',],
             env: elsEnv,
           })
+          lscLog('Launched els server pid=' + psELS.pid)
           // pump els std output to extension output channel
           const [elsOut, elsErr, elsPort] = psELS.stdio.slice(1, 4)
           if (elsOut) {
