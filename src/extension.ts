@@ -183,11 +183,17 @@ export function activate(_context: vscode.ExtensionContext) {
 
 export function deactivate() {
   if (client) {
-    return client.stop().then(() => checkKillProcess(psELS))
+    return client.stop().finally(() => checkKillProcess(psELS))
   } else {
     checkKillProcess(psELS)
   }
 }
+
+// workaround described at:
+// https://github.com/microsoft/vscode/issues/567#issuecomment-159400247
+process.on('SIGTERM', () => {
+  if (psELS !== null) psELS.kill("SIGTERM")
+})
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
