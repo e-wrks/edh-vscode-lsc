@@ -46,7 +46,7 @@ function lscLog(msg: string) {
 
 async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTransports> {
   const ElsConnRetry = 10
-  const ElsConnWait = 9000
+  const ElsConnWait = 60000 // force retry every miniute
 
   lscLog('Obtaining els config ...')
   const elsPort: string = await new Promise((resolve, reject) => {
@@ -62,89 +62,95 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
   })
   lscLog('Got configured els port ' + elsPort)
 
-  let actPort = elsPort
+  let tryPort = elsPort
   let finalErr = Error('failed connecting to els')
-  for (let retryCntr = 0, retryWait = 0; ;) {
+  for (let retryCntr = 0; retryCntr < ElsConnRetry; retryCntr++) {
     try {
       const trans = await new Promise<MessageTransports>((resolve, reject) => {
-        lscLog('Try connecting to els on port ' + actPort)
-        const sock = net.connect(actPort)
+        lscLog('Try connecting to els on port ' + tryPort)
+        const sock = net.connect(tryPort)
         sock.once('error', reject)
         sock.once('connect', () => resolve({
           reader: new SocketMessageReader(sock),
           writer: new SocketMessageWriter(sock),
         }))
       })
-      lscLog('Connected to els on port ' + actPort)
+      lscLog('Connected to els on port ' + tryPort)
       return trans
     } catch (err) {
       finalErr = err
-      if (++retryCntr > ElsConnRetry) break
+    }
+
+    if (noLaunchLS) {
+      lscLog('Waiting ' + (ElsConnWait / 1000)
+        + ' seconds before try again ...')
+      await sleep(ElsConnWait)
+      continue
+    }
+
+    if (retryCntr > 1) {
+      lscLog('Try launching els server again ... ')
+    } else {
+      lscLog('Launching els server ... ')
+    }
+
+    const launchedPort = new Promise<string>((resolve, reject) => {
       try {
-
-        if (noLaunchLS) {
-          continue
-        }
-
-        if (retryCntr > 1) {
-          lscLog('Try launching els server again ... ')
-        } else {
-          lscLog('Launching els server ... ')
-        }
-
         const elsCmdl = debugLSP ? ['stack', 'run', 'els'] : ['epm', 'x', 'els']
         const elsEnv = debugLSP ? Object.assign({}, ps.env, {
           'EDH_LOG_LEVEL': 'DEBUG',
         }) : undefined
 
-        try {
-          checkKillProcess(psELS)
-          psELS = cp.spawn('/usr/bin/env', elsCmdl, {
-            shell: false,
-            cwd: elsWorkFolder,
-            stdio: ['inherit', 'pipe', 'pipe', 'pipe',],
-            env: elsEnv,
-          })
-          lscLog('Launched els server pid=' + psELS.pid)
-            ;
-          (() => {
-            const ps = psELS
-            ps.on('exit', () => lscLog('els server crashed pid=' + ps.pid))
-            // pump els std output to extension output channel
-            const [elsOut, elsErr, elsPort] = ps.stdio.slice(1, 4)
-            if (elsOut) {
-              elsOut.on('data',
-                data => client.outputChannel.append(data.toString()))
-            }
-            if (elsErr) {
-              elsErr.on('data',
-                data => client.outputChannel.append(data.toString()))
-            }
-            if (elsPort) {
-              let dynPort = ''
-              elsPort.on('data', data => {
-                dynPort += data.toString()
-                console.debug('Dyn port updated: ' + dynPort + ' from segment ' + data)
-              })
-              elsPort.on('close', () => {
-                const dynPortFinal = dynPort.trim()
-                lscLog('Got dynamic els port: ' + dynPortFinal + ' from ' + dynPort)
-                if (dynPortFinal) {
-                  actPort = dynPortFinal
-                }
-              })
-            }
-          })()
-        } catch (err) {
-          console.error(err)
-          lscLog('Failed launching els server: ' + err)
-        }
-
+        checkKillProcess(psELS)
+        psELS = cp.spawn('/usr/bin/env', elsCmdl, {
+          shell: false,
+          cwd: elsWorkFolder,
+          stdio: ['inherit', 'pipe', 'pipe', 'pipe',],
+          env: elsEnv,
+        })
+        lscLog('Launched els server pid=' + psELS.pid)
+          ;
+        (() => {
+          const ps = psELS
+          ps.on('exit', () => lscLog('els server crashed pid=' + ps.pid))
+          // pump els std output to extension output channel
+          const [elsOut, elsErr, elsPort] = ps.stdio.slice(1, 4)
+          if (elsOut) {
+            elsOut.on('data',
+              data => client.outputChannel.append(data.toString()))
+          }
+          if (elsErr) {
+            elsErr.on('data',
+              data => client.outputChannel.append(data.toString()))
+          }
+          if (elsPort) {
+            let dynPort = ''
+            elsPort.on('data', data => {
+              dynPort += data.toString()
+              console.debug('Dyn port updated: ' + dynPort + ' from segment ' + data)
+            })
+            elsPort.on('close', () => {
+              const dynPortFinal = dynPort.trim()
+              lscLog('Got dynamic els port: ' + dynPortFinal + ' from ' + dynPort)
+              if (dynPortFinal) {
+                resolve(dynPortFinal)
+              }
+            })
+          }
+        })()
+      } catch (err) {
+        debugger
+        reject(err)
       } finally {
-        retryWait += ElsConnWait
-        lscLog('Waiting ' + (retryWait / 1000) + ' seconds before try again ...')
-        await sleep(retryWait)
+        setTimeout(() => resolve(tryPort), ElsConnWait)
       }
+    })
+
+    try {
+      tryPort = await launchedPort
+    } catch (err) {
+      console.error(err)
+      lscLog('Failed launching els server: ' + err)
     }
   }
 
