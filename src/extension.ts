@@ -29,7 +29,7 @@ function checkKillProcess(ps: cp.ChildProcess | null): void {
   }
   try {
     console.debug('Killing els server pid=' + ps.pid)
-    process.kill(ps.pid, "SIGKILL");
+    process.kill(-ps.pid, "SIGKILL");
   } catch (error) {
     // All is fine.
   }
