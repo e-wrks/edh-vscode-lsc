@@ -201,7 +201,9 @@ export function deactivate() {
 // workaround described at:
 // https://github.com/microsoft/vscode/issues/567#issuecomment-159400247
 process.on('SIGTERM', () => {
-  if (psELS !== null) psELS.kill("SIGTERM")
+  if (psELS !== null) {
+    process.kill(-psELS.pid, "SIGTERM");
+  }
 })
 
 function sleep(ms: number) {
