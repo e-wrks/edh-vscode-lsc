@@ -29,7 +29,7 @@ function checkKillProcess(ps: cp.ChildProcess | null): void {
   }
   try {
     console.debug('Killing els server pid=' + ps.pid)
-    process.kill(-ps.pid, "SIGKILL");
+    process.kill(ps.pid, "SIGKILL");
   } catch (error) {
     // All is fine.
   }
@@ -109,7 +109,9 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
           env: elsEnv,
         })
         lscLog('Launched els server pid=' + psELS.pid)
+          // this semicolon is necessary to disambiguate following parenthesis
           ;
+        // around the arrow def from call making
         (() => {
           const ps = psELS
           ps.on('exit', () => lscLog('els server crashed pid=' + ps.pid))
@@ -202,7 +204,7 @@ export function deactivate() {
 // https://github.com/microsoft/vscode/issues/567#issuecomment-159400247
 process.on('SIGTERM', () => {
   if (psELS !== null) {
-    process.kill(-psELS.pid, "SIGTERM");
+    psELS.kill("SIGTERM");
   }
 })
 
