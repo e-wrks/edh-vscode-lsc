@@ -6,7 +6,7 @@
 		"url": "https://github.com/e-wrks/edh-vscode-lsc"
 	},
 	"name": "edh-vscode-lsc",
-	"displayName": "Đ (Edh) Language Server (VSCode client)",
+	"displayName": "Đ Language Server",
 	"description": "LSP client extension to hook up Đ (Edh) language server for VSCode",
 	"version": "1.0.15",
 	"engines": {
