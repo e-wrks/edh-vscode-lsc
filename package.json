@@ -8,7 +8,7 @@
 	"name": "edh-vscode-lsc",
 	"displayName": "Đ Language Server",
 	"description": "LSP client extension to hook up Đ (Edh) language server for VSCode",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"engines": {
 		"vscode": "^1.50.0"
 	},
