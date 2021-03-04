@@ -8,13 +8,13 @@ import * as vscode from 'vscode'
 
 import {
   SocketMessageReader, SocketMessageWriter,
-} from 'vscode-jsonrpc'
+} from 'vscode-jsonrpc/node'
 
 import {
   LanguageClient,
   LanguageClientOptions,
   MessageTransports,
-} from 'vscode-languageclient'
+} from 'vscode-languageclient/node'
 
 
 let debugLSP = false
