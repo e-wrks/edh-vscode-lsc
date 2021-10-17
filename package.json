@@ -10,7 +10,7 @@
 	"description": "LSP client extension to hook up Đ (Edh) language server for VSCode",
 	"version": "1.1.3",
 	"engines": {
-		"vscode": "^1.50.0"
+		"vscode": "^1.52.0"
 	},
 	"categories": [
 		"Programming Languages"
