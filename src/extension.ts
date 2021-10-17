@@ -63,7 +63,7 @@ async function connectEdhLangServer(elsWorkFolder: string): Promise<MessageTrans
   lscLog('Got configured els port ' + elsPort)
 
   let tryPort = elsPort
-  let finalErr = Error('failed connecting to els')
+  let finalErr: unknown = Error('failed connecting to els')
   for (let retryCntr = 0; retryCntr < ElsConnRetry; retryCntr++) {
     try {
       const trans = await new Promise<MessageTransports>((resolve, reject) => {
@@ -211,4 +211,3 @@ process.on('SIGTERM', () => {
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
-
